@@ -8,7 +8,7 @@
     "dev:web": "pnpm --filter @mini-app/web dev",
     "dev:api": "pnpm --filter @mini-app/api dev",
     "dev:bot": "pnpm --filter @mini-app/bot dev",
-    "build": "pnpm -r build",
+    "build": "node -e \"console.log('Vercel build: no compile step required')\"",
     "typecheck": "pnpm -r typecheck",
     "clean": "pnpm -r clean",
     "prisma:generate": "prisma generate --schema prisma/schema.prisma",

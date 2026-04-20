@@ -1,0 +1,10 @@
+.git
+.env
+.env.example
+apps
+docs
+packages
+prisma/dev.db
+README.md
+tsconfig.base.json
+pnpm-workspace.yaml

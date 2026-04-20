@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kalym Mini App</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4efe7;
+        --surface: rgba(255, 252, 246, 0.95);
+        --surface-strong: #fffdfa;
+        --line: rgba(98, 74, 48, 0.16);
+        --text: #2d2318;
+        --muted: #6f6457;
+        --accent: #b96a2e;
+        --accent-strong: #995421;
+        --danger: #b42318;
+        --success: #127b53;
+        --font-display: Georgia, "Times New Roman", serif;
+        --font-body: Arial, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: var(--font-body);
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(185, 106, 46, 0.16), transparent 30%),
+          linear-gradient(180deg, #efe6d9 0%, var(--bg) 30%, #f6f1e9 100%);
+      }
+      .shell {
+        width: min(760px, calc(100vw - 24px));
+        margin: 0 auto;
+        padding: 20px 0 32px;
+      }
+      .hero { padding: 20px 20px 18px; }
+      .eyebrow {
+        margin: 0 0 10px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--accent);
+      }
+      h1 {
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: clamp(2.2rem, 5vw, 3.6rem);
+        line-height: 0.95;
+        max-width: 10ch;
+      }
+      .hero-copy {
+        margin: 12px 0 0;
+        max-width: 52ch;
+        line-height: 1.55;
+        color: var(--muted);
+      }
+      .panel {
+        margin: 0 20px;
+        padding: 20px;
+        border-radius: 28px;
+        background: linear-gradient(180deg, var(--surface-strong), var(--surface));
+        border: 1px solid var(--line);
+        box-shadow: 0 18px 40px rgba(52, 36, 18, 0.08);
+      }
+      .grid { display: grid; gap: 14px; }
+      label {
+        display: grid;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 0.94rem;
+      }
+      input, textarea, button {
+        width: 100%;
+        border-radius: 16px;
+        border: 1px solid rgba(123, 92, 56, 0.22);
+        padding: 14px 16px;
+        font: inherit;
+        background: rgba(255, 255, 255, 0.84);
+        color: var(--text);
+      }
+      textarea { min-height: 132px; resize: vertical; }
+      button {
+        border: none;
+        background: var(--accent);
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      button:hover { background: var(--accent-strong); }
+      .status {
+        min-height: 24px;
+        margin: 12px 0 0;
+        font-size: 0.95rem;
+      }
+      .status.error { color: var(--danger); }
+      .status.success { color: var(--success); }
+      .response {
+        margin: 16px 20px 0;
+        padding: 18px;
+        border-radius: 24px;
+        border: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.68);
+      }
+      pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--text);
+      }
+      @media (max-width: 640px) {
+        .shell { width: min(100vw, 100%); padding-top: 10px; }
+        .hero, .panel, .response {
+          margin-left: 16px;
+          margin-right: 16px;
+          padding-left: 16px;
+          padding-right: 16px;
+        }
+      }
+    </style>
+    <script src="https://telegram.org/js/telegram-web-app.js?62"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <p class="eyebrow">New job</p>
+        <h1>Создать заявку</h1>
+        <p class="hero-copy">
+          Заполните форму, и заявка уйдет в модерацию со статусом pending_moderation. После approve от администратора в Telegram заявка станет active.
+        </p>
+      </header>
+
+      <section class="panel">
+        <form id="auth-form" class="grid" style="margin-bottom: 18px;">
+          <label>
+            Telegram ID для теста вне Telegram
+            <input name="telegramId" type="number" value="100001" required />
+          </label>
+          <button type="submit">Войти для теста</button>
+        </form>
+
+        <form id="job-form" class="grid">
+          <label>
+            Что нужно сделать
+            <textarea name="title" required></textarea>
+          </label>
+          <label>
+            Адрес
+            <input name="address" type="text" required />
+          </label>
+          <label>
+            Цена
+            <input name="price" type="number" min="1" step="1" required />
+          </label>
+          <label>
+            Когда нужно
+            <input name="whenNeeded" type="datetime-local" required />
+          </label>
+          <button type="submit">Отправить заявку</button>
+          <p id="status" class="status"></p>
+        </form>
+      </section>
+
+      <section class="response">
+        <pre id="output">{}</pre>
+      </section>
+    </main>
+
+    <script>
+      const authForm = document.getElementById("auth-form");
+      const form = document.getElementById("job-form");
+      const statusNode = document.getElementById("status");
+      const output = document.getElementById("output");
+
+      function render(data) {
+        output.textContent = JSON.stringify(data, null, 2);
+      }
+
+      function setStatus(message, kind) {
+        statusNode.textContent = message;
+        statusNode.className = "status " + kind;
+      }
+
+      async function apiFetch(path, options) {
+        const response = await fetch(path, {
+          credentials: "include",
+          headers: {
+            "content-type": "application/json"
+          },
+          ...options
+        });
+
+        const data = await response.json();
+        render(data);
+        return { response, data };
+      }
+
+      authForm.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const telegramId = Number(new FormData(authForm).get("telegramId"));
+        const tg = window.Telegram && window.Telegram.WebApp;
+        const payload = tg && tg.initDataUnsafe && tg.initDataUnsafe.user
+          ? { initData: tg.initData, telegramUser: tg.initDataUnsafe.user }
+          : { telegramUser: { id: telegramId, first_name: "Demo", last_name: "User" } };
+
+        const result = await apiFetch("/api/auth/telegram", {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+
+        setStatus(result.response.ok ? "Вход выполнен." : (result.data.error || "Не удалось войти."), result.response.ok ? "success" : "error");
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        setStatus("", "");
+
+        const formData = new FormData(form);
+        const title = String(formData.get("title") || "").trim();
+        const address = String(formData.get("address") || "").trim();
+        const price = Number(formData.get("price"));
+        const whenNeeded = String(formData.get("whenNeeded") || "").trim();
+
+        if (!title) return setStatus("Заполните поле 'что нужно сделать'.", "error");
+        if (!address) return setStatus("Укажите адрес.", "error");
+        if (!Number.isFinite(price) || price <= 0) return setStatus("Цена должна быть больше 0.", "error");
+        if (!whenNeeded) return setStatus("Укажите, когда нужно.", "error");
+
+        const jobResult = await apiFetch("/api/jobs", {
+          method: "POST",
+          body: JSON.stringify({
+            title,
+            address,
+            price,
+            whenNeeded: new Date(whenNeeded).toISOString()
+          })
+        });
+
+        if (!jobResult.response.ok) {
+          setStatus(jobResult.data.error || "Не удалось создать заявку.", "error");
+          return;
+        }
+
+        setStatus("Заявка создана и отправлена в moderation queue.", "success");
+        form.reset();
+      });
+    </script>
+  </body>
+</html>

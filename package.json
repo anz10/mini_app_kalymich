@@ -1,0 +1,24 @@
+{
+  "name": "mini-app-kalymich",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @mini-app/web --filter @mini-app/api --filter @mini-app/bot dev",
+    "dev:web": "pnpm --filter @mini-app/web dev",
+    "dev:api": "pnpm --filter @mini-app/api dev",
+    "dev:bot": "pnpm --filter @mini-app/bot dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "clean": "pnpm -r clean",
+    "prisma:generate": "prisma generate --schema prisma/schema.prisma",
+    "prisma:push": "prisma db push --schema prisma/schema.prisma"
+  },
+  "devDependencies": {
+    "@prisma/client": "^6.5.0",
+    "@types/node": "^22.10.1",
+    "prisma": "^6.5.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
